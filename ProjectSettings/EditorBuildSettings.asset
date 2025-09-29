@@ -4,6 +4,9 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Project/Levels/Test/DimaTestScene.unity
+    guid: 803658ce37cc0fa4ba9161a92512d9f6
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
