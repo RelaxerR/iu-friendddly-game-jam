@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: -1955615607992098839}
   - component: {fileID: -6841777217843282049}
   - component: {fileID: -6145521470908898872}
+  - component: {fileID: 8719618918022394692}
   m_Layer: 0
   m_Name: TestPlayerCharacter
   m_TagString: Untagged
@@ -204,3 +205,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RaycastAttack
   Damage: 10
   PlayerMovement: {fileID: -1955615607992098839}
+--- !u!114 &8719618918022394692
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528482419518838476}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 97f3c799345920141a2e17ebc9a9d231, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerForces

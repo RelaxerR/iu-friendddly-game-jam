@@ -2,6 +2,7 @@ using Fusion;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(PlayerForces))]
 public class PlayerMovement : NetworkBehaviour
 {
     [Header("Movement Settings")]
@@ -75,6 +76,10 @@ public class PlayerMovement : NetworkBehaviour
                 velocity += slideDir * slideSpeed * Runner.DeltaTime;
             }
         }
+
+        // JumpBoost
+        Vector3 extraForces = GetComponent<PlayerForces>()?.ConsumeForces() ?? Vector3.zero;
+        velocity += extraForces;
 
         controller.Move(velocity * Runner.DeltaTime);
     }
