@@ -1,8 +1,18 @@
 namespace Project.Scripts.Boost.Abstract
 {
-  public interface IBoost
-  {
-    public void Apply();
-    public void Remove();
-  }
+    /// <summary>
+    /// Интерфейс для буста.
+    /// </summary>
+    public interface IBoost
+    {
+        /// <summary>
+        /// Применяет эффект буста.
+        /// </summary>
+        void Apply();
+
+        /// <summary>
+        /// Отменяет эффект буста.
+        /// </summary>
+        void Remove();
+    }
 }

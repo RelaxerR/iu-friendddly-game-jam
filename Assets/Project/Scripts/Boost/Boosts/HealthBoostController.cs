@@ -4,17 +4,34 @@ using UnityEngine;
 
 namespace Project.Scripts.Boost.Boosts
 {
-  public class HealthBoostController : MonoBehaviour, IBoost
-  {
-    [SerializeField]
-    private HealthBoostSettings healthBoostSettings;
-    
-    public void Apply()
+    /// <summary>
+    /// Контроллер буста здоровья.
+    /// </summary>
+    public class HealthBoostController : MonoBehaviour, IBoost
     {
-      Destroy(gameObject);
-      //TODO: добавить логику увеличения ХП
-      throw new System.NotImplementedException("Health boost logic is not implemented");
+        #region Fields
+
+        [SerializeField] private HealthBoostSettings healthBoostSettings;
+
+        #endregion
+
+        #region IBoost Implementation
+
+        /// <inheritdoc />
+        public void Apply()
+        {
+            // TODO: добавить логику увеличения ХП
+            var healAmount = healthBoostSettings.HealAmount;
+            Debug.LogWarning("Health boost logic is not implemented");
+            Destroy(gameObject);
+        }
+
+        /// <inheritdoc />
+        public void Remove()
+        {
+            // Буст здоровья не требует отмены.
+        }
+
+        #endregion
     }
-    public void Remove() { }
-  }
 }

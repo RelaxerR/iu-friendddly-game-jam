@@ -2,9 +2,15 @@ using UnityEngine;
 
 namespace Project.Scripts.Boost.Settings
 {
-  [CreateAssetMenu(fileName = "Health boost", menuName = "Boosts/Health boost", order = 0)]
-  public class HealthBoostSettings : ScriptableObject
-  {
-    public int HealAmount;
-  }
+    /// <summary>
+    /// Настройки буста здоровья.
+    /// </summary>
+    [CreateAssetMenu(fileName = "Health Boost", menuName = "Boosts/Health Boost", order = 0)]
+    public class HealthBoostSettings : ScriptableObject
+    {
+        /// <summary>
+        /// Количество здоровья, которое восстанавливается.
+        /// </summary>
+        public int HealAmount;
+    }
 }

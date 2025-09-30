@@ -1,8 +1,20 @@
 namespace Project.Scripts.Boost.Abstract
 {
-  public interface IBoostController
-  {
-    public void AddBoost(IBoost boost);
-    public void RemoveBoost(IBoost boost);
-  }
+    /// <summary>
+    /// Контроллер управления бустами.
+    /// </summary>
+    public interface IBoostController
+    {
+        /// <summary>
+        /// Добавляет буст.
+        /// </summary>
+        /// <param name="boost">Буст для добавления.</param>
+        void AddBoost(IBoost boost);
+
+        /// <summary>
+        /// Удаляет буст.
+        /// </summary>
+        /// <param name="boost">Буст для удаления.</param>
+        void RemoveBoost(IBoost boost);
+    }
 }

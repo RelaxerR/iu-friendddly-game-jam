@@ -7,41 +7,70 @@ using UnityEngine.Events;
 
 namespace Project.Scripts.Boost
 {
-  [RequireComponent(typeof(BoxCollider))]
-  public class PlayerBoostController : MonoBehaviour, IBoostController
-  {
-    private readonly List<IBoost> activeBoosts = new();
-    
-    public void AddBoost(IBoost boost)
+    /// <summary>
+    /// Контроллер бустов игрока.
+    /// </summary>
+    [RequireComponent(typeof(BoxCollider))]
+    public class PlayerBoostController : MonoBehaviour, IBoostController
     {
-      if (activeBoosts.Contains(boost)) return;
-      
-      boost.Apply();
-      activeBoosts.Add(boost);
+        #region Fields
 
-      var duration = boost is IBoostDurable durableBoost ? durableBoost.GetDuration() : 0;
-      StartCoroutine(RemoveBoostCoroutine(boost, duration));
-    }
-    public void RemoveBoost(IBoost boost)
-    {
-      if (!activeBoosts.Contains(boost)) throw new ArgumentException("Boost not found");
-      
-      boost.Remove();
-      activeBoosts.Remove(boost);
-    }
+        private readonly List<IBoost> activeBoosts = new();
 
-    private IEnumerator RemoveBoostCoroutine(IBoost boost, float duration)
-    {
-      yield return new WaitForSeconds(duration);
-      RemoveBoost(boost);
-    }
+        #endregion
 
-    private void OnTriggerEnter(Collider other)
-    {
-      if (!other.CompareTag("Boost")) return;
-      
-      var boost = other.GetComponent<IBoost>();
-      AddBoost(boost);
+        #region IBoostController Implementation
+
+        /// <inheritdoc />
+        public void AddBoost(IBoost boost)
+        {
+            if (boost == null) throw new ArgumentNullException(nameof(boost));
+            if (activeBoosts.Contains(boost)) return;
+
+            boost.Apply();
+            activeBoosts.Add(boost);
+
+            // Если буст временный, запускаем отсчёт времени
+            if (boost is not IBoostDurable durableBoost)
+                return;
+            
+            var duration = durableBoost.GetDuration();
+            StartCoroutine(RemoveBoostCoroutine(boost, duration));
+        }
+
+        /// <inheritdoc />
+        public void RemoveBoost(IBoost boost)
+        {
+            if (boost == null) throw new ArgumentNullException(nameof(boost));
+            if (!activeBoosts.Contains(boost)) throw new ArgumentException("Boost not found");
+
+            boost.Remove();
+            activeBoosts.Remove(boost);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Отложенное удаление буста по истечении времени.
+        /// </summary>
+        /// <param name="boost">Буст для удаления.</param>
+        /// <param name="duration">Время до удаления.</param>
+        private IEnumerator RemoveBoostCoroutine(IBoost boost, float duration)
+        {
+            yield return new WaitForSeconds(duration);
+            RemoveBoost(boost);
+        }
+
+        private void OnTriggerEnter(Collider other)
+        {
+            if (!other.CompareTag("Boost")) return;
+
+            var boost = other.GetComponent<IBoost>();
+            if (boost != null) AddBoost(boost);
+        }
+
+        #endregion
     }
-  }
 }
