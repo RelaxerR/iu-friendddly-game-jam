@@ -8,13 +8,13 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float moveSpeed = 6f;       // Скорость передвижения
     [SerializeField] private float jumpHeight = 1.5f;    // Высота прыжка
     [SerializeField] private float gravity = -9.81f;     // Сила гравитации
-    [SerializeField] private Camera Camera;  // Ссылка на камеру
     [SerializeField] private float slideSpeed = 5f;      // Скорость скатывания по наклону
     [SerializeField] private float slopeLimit = 45f;     // Максимальный угол, на котором персонаж не скользит
 
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
+    public Camera Camera;
 
     private void Awake()
     {
