@@ -3,13 +3,12 @@ using UnityEngine;
 
 public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
 {
-    public GameObject PlayerPrefab;
+    public GameObject PlayerPrefab; // Префаб модели игрока
+    public Transform[] SpawnPoints; // Массив заранее расставленных спавнпоинтов
 
     public void PlayerJoined(PlayerRef player)
     {
-        if (player == Runner.LocalPlayer)
-        {
-            Runner.Spawn(PlayerPrefab, new Vector3(0, 1.5f, 0), Quaternion.identity);
-        }
+        Transform spawnPoint = SpawnPoints[Random.Range(0, SpawnPoints.Length)];
+        Runner.Spawn(PlayerPrefab, spawnPoint.position, spawnPoint.rotation, player);
     }
 }
