@@ -310,6 +310,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83f92efc0f574f6fa220cf056af3ba7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Media.MediaManager
+  gameModeManager: {fileID: 1941491}
   _settings: {fileID: 11400000, guid: 30d864ff226d048aca4844fff4a3b811, type: 2}
 --- !u!4 &699372541
 Transform:
