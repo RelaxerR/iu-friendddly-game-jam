@@ -1,55 +1,28 @@
 using System;
 using System.Collections;
-using JetBrains.Annotations;
-using Project.Scripts.Bootstrap;
 using UnityEngine;
+using Fusion;
+using Project.Scripts.Bootstrap;
 
 namespace Project.Scripts.Media
 {
     /// <summary>
     /// Управляет воспроизведением аудио в зависимости от текущего режима игры.
+    /// Работает ТОЛЬКО на клиенте (хост или remote client).
     /// </summary>
-    [RequireComponent(typeof(AudioSource))]
     public class MediaManager : MonoBehaviour
     {
-        #region Fields
-
         [SerializeField] private MediaSettings _settings;
-
-        [CanBeNull] private static MediaManager _instance;
 
         private AudioSource _audioSourceA;
         private AudioSource _audioSourceB;
         private AudioSource _currentSource;
         private AudioSource _nextSource;
 
-        #endregion
-
-        #region Singleton
-
-        /// <summary>
-        /// Возвращает текущий экземпляр MediaManager. Если экземпляр не существует, 
-        /// ищет его в сцене.
-        /// </summary>
-        /// <returns>Экземпляр MediaManager.</returns>
-        public static MediaManager GetInstance()
-        {
-            if (!_instance)
-            {
-                _instance = FindAnyObjectByType<MediaManager>();
-            }
-            return _instance;
-        }
-
-        #endregion
-
-        #region MonoBehaviour Methods
+        private GameModeManager _gameModeManager;
 
         private void Start()
         {
-            DontDestroyOnLoad(gameObject);
-
-            // Создаем два AudioSource
             _audioSourceA = gameObject.AddComponent<AudioSource>();
             _audioSourceB = gameObject.AddComponent<AudioSource>();
 
@@ -62,72 +35,50 @@ namespace Project.Scripts.Media
             _currentSource = _audioSourceA;
             _nextSource = _audioSourceB;
 
-            // Подписываемся на событие
-            GameModeManager.GetInstance().OnGameModeChanged += OnGameModeChanged;
+            // Найти GameModeManager (он должен быть Scene Object или spawned)
+            _gameModeManager = FindAnyObjectByType<GameModeManager>();
+            if (!_gameModeManager)
+            {
+                Debug.LogError("MediaManager: GameModeManager not found in scene!");
+                enabled = false;
+                return;
+            }
 
-            // Начинаем с текущего режима
-            PlayCurrentMode();
+            // Подписываемся на событие (оно вызывается на всех клиентах)
+            _gameModeManager.OnGameModeChanged += OnGameModeChanged;
+
+            // Применяем начальное состояние
+            OnGameModeChanged(_gameModeManager.CurrentMode);
         }
 
         private void OnDestroy()
         {
-            GameModeManager.GetInstance().OnGameModeChanged -= OnGameModeChanged;
+            if (_gameModeManager)
+            {
+                _gameModeManager.OnGameModeChanged -= OnGameModeChanged;
+            }
         }
-
-        #endregion
-
-        #region Event Handlers
 
         private void OnGameModeChanged(GameModeManager.GameMode mode)
         {
             StartCoroutine(FadeBetweenTracks(mode));
         }
 
-        #endregion
-
-        #region Private Methods
-
-        /// <summary>
-        /// Воспроизводит музыку для текущего режима.
-        /// </summary>
-        private void PlayCurrentMode()
-        {
-            var clip = GetCurrentClip();
-            if (!clip)
-                return;
-            
-            _currentSource.clip = clip;
-            _currentSource.loop = true;
-            _currentSource.Play();
-        }
-
-        /// <summary>
-        /// Возвращает аудиоклип, соответствующий текущему режиму игры.
-        /// </summary>
-        /// <returns>Аудиоклип для текущего режима.</returns>
-        private AudioClip GetCurrentClip()
-        {
-            var mode = GameModeManager.GetInstance().CurrentMode;
-            return mode == GameModeManager.GameMode.RedTime ? _settings.RedTimeMusic : _settings.GreenTimeMusic;
-        }
-
-        /// <summary>
-        /// Плавно переключает между аудиотреками при смене режима.
-        /// </summary>
-        /// <param name="newMode">Новый режим игры.</param>
-        /// <returns>Корутина для плавного переключения.</returns>
         private IEnumerator FadeBetweenTracks(GameModeManager.GameMode newMode)
         {
-            // Назначаем новый клип на следующий источник
-            var newClip = newMode == GameModeManager.GameMode.RedTime ? _settings.RedTimeMusic : _settings.GreenTimeMusic;
+            var newClip = newMode == GameModeManager.GameMode.RedTime 
+                ? _settings.RedTimeMusic 
+                : _settings.GreenTimeMusic;
 
-            if (newClip)
+            if (!newClip)
             {
-                _nextSource.clip = newClip;
-                _nextSource.loop = true;
-                _nextSource.volume = 0f;
-                _nextSource.Play();
+                yield break;
             }
+
+            _nextSource.clip = newClip;
+            _nextSource.loop = true;
+            _nextSource.volume = 0f;
+            _nextSource.Play();
 
             var elapsed = 0f;
             var duration = _settings.FadeInDuration;
@@ -143,10 +94,8 @@ namespace Project.Scripts.Media
                 yield return null;
             }
 
-            // После фейда меняем местами источники
+            // Меняем источники местами
             (_currentSource, _nextSource) = (_nextSource, _currentSource);
         }
-
-        #endregion
     }
 }
