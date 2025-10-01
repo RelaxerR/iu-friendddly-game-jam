@@ -10,6 +10,14 @@ namespace Project.Scripts.Bootstrap
     /// </summary>
     public class GameModeManager : NetworkBehaviour
     {
+        public override void Spawned()
+        {
+            base.Spawned();
+            CurrentMode = GameMode.GreenTime;
+            OnGameModeChanged?.Invoke(CurrentMode);
+            Debug.Log("GameModeManager.Spawned");
+        }
+
         public enum GameMode : byte
         {
             RedTime,
@@ -21,7 +29,7 @@ namespace Project.Scripts.Bootstrap
 
         // Синхронизируемое поле — Fusion автоматически рассылает изменения от сервера ко всем клиентам
         [Networked, OnChangedRender(nameof(OnCurrentModeChanged))]
-        public GameMode CurrentMode { get; private set; } = GameMode.GreenTime;
+        public GameMode CurrentMode { get; private set; }
 
         // Вызывается на всех клиентах при получении нового значения CurrentMode от сервера
         private void OnCurrentModeChanged()
