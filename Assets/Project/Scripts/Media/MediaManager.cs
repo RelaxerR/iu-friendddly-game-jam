@@ -12,14 +12,35 @@ namespace Project.Scripts.Media
     /// </summary>
     public class MediaManager : MonoBehaviour
     {
+        [SerializeField] private GameModeManager gameModeManager;
+
+        private void Awake()
+        {
+            // Подписываемся как можно раньше
+            if (gameModeManager)
+            {
+                gameModeManager.OnGameModeChanged += OnGameModeChanged;
+            }
+        }
+
+        private void OnGameModeChanged(GameModeManager.GameMode mode)
+        {
+            // Здесь безопасно использовать mode
+            ApplyGameMode(mode);
+        }
+
+        private void ApplyGameMode(GameModeManager.GameMode mode)
+        {
+            Debug.Log($"Запуск трека для режима [{mode}]");
+            StartCoroutine(FadeBetweenTracks(mode));
+        }
+        
         [SerializeField] private MediaSettings _settings;
 
         private AudioSource _audioSourceA;
         private AudioSource _audioSourceB;
         private AudioSource _currentSource;
         private AudioSource _nextSource;
-
-        private GameModeManager _gameModeManager;
 
         private void Start()
         {
@@ -36,8 +57,7 @@ namespace Project.Scripts.Media
             _nextSource = _audioSourceB;
 
             // Найти GameModeManager (он должен быть Scene Object или spawned)
-            _gameModeManager = FindAnyObjectByType<GameModeManager>();
-            if (!_gameModeManager)
+            if (!gameModeManager)
             {
                 Debug.LogError("MediaManager: GameModeManager not found in scene!");
                 enabled = false;
@@ -45,23 +65,15 @@ namespace Project.Scripts.Media
             }
 
             // Подписываемся на событие (оно вызывается на всех клиентах)
-            _gameModeManager.OnGameModeChanged += OnGameModeChanged;
-
-            // Применяем начальное состояние
-            OnGameModeChanged(_gameModeManager.CurrentMode);
+            gameModeManager.OnGameModeChanged += OnGameModeChanged;
         }
 
         private void OnDestroy()
         {
-            if (_gameModeManager)
+            if (gameModeManager)
             {
-                _gameModeManager.OnGameModeChanged -= OnGameModeChanged;
+                gameModeManager.OnGameModeChanged -= OnGameModeChanged;
             }
-        }
-
-        private void OnGameModeChanged(GameModeManager.GameMode mode)
-        {
-            StartCoroutine(FadeBetweenTracks(mode));
         }
 
         private IEnumerator FadeBetweenTracks(GameModeManager.GameMode newMode)
