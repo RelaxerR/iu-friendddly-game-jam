@@ -1,34 +1,76 @@
 using UnityEngine;
+using Fusion;
 
 [RequireComponent(typeof(Camera))]
-public class PlayerCamera : MonoBehaviour
+public class PlayerCamera : NetworkBehaviour
 {
     [Header("Settings")]
-    [SerializeField] private float mouseSensitivity = 100f; // Чувствительность мыши
-    [SerializeField] private float maxLookAngle = 85f; // Максимальный угол обзора
-    [SerializeField] private Vector3 offset = new(0, 0.5f, 0); // Смещение камеры для нужного расположения
+    [SerializeField] private float mouseSensitivity = 250f;
+    [SerializeField] private float maxLookAngle = 45f;
+    [SerializeField] private Transform PlayerBody;
 
-    public Transform Target;
-    private float xRotation = 0f;
+    private Camera cam;
+    private AudioListener audioListener;
+
+    // спортсмены для оффсета
+    private Vector3 _startLocalPos;
+    private Quaternion _startLocalRot;
+
+    private float xRotation;
     private float yRotation;
 
-    public void LateUpdate()
+    private void Awake()
     {
-        if (Target == null)
-            return;
+        cam = GetComponent<Camera>();
+        audioListener = GetComponent<AudioListener>();
 
-        transform.position = Target.position + offset;
+        // сохраняем исходный локальный оффсет камеры
+        _startLocalPos = transform.localPosition;
+        _startLocalRot = transform.localRotation;
+    }
+
+    public override void Spawned()
+    {
+        // только локальному игроку оставляем камеру и слушатель звука
+        if (!Object.HasInputAuthority)
+        {
+            cam.enabled = false;
+            if (audioListener) audioListener.enabled = false;
+            return;
+        }
+
+        // инициализируем Yaw по телу
+        yRotation = PlayerBody.rotation.eulerAngles.y;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void LateUpdate()
+    {
+        if (!Object.HasInputAuthority) return;
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        // Поворот камерой вверх/вниз
         xRotation -= mouseY;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
-
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 
         yRotation += mouseX;
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+        PlayerBody.rotation = Quaternion.Euler(0f, yRotation, 0f);
+    }
+
+    // RPC с StateAuthority → только на том клиенте, который владеет входом
+    [Rpc(RpcSources.StateAuthority, RpcTargets.InputAuthority)]
+    public void Rpc_RespawnCamera()
+    {
+        // мгновенно вернуть локальные оффсеты
+        transform.localPosition = _startLocalPos;
+        transform.localRotation = _startLocalRot;
+
+        // сброс углов просмотра
+        xRotation = 0f;
+        yRotation = PlayerBody.rotation.eulerAngles.y;
     }
 }

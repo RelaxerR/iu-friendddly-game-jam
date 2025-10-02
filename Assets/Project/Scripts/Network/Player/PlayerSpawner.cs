@@ -8,7 +8,15 @@ public class PlayerSpawner : SimulationBehaviour, IPlayerJoined
 
     public void PlayerJoined(PlayerRef player)
     {
+        if (!Runner.IsPlayer) return;
+
         Transform spawnPoint = SpawnPoints[Random.Range(0, SpawnPoints.Length)];
-        Runner.Spawn(PlayerPrefab, spawnPoint.position, spawnPoint.rotation, player);
+        Runner.Spawn(PlayerPrefab, spawnPoint.position, spawnPoint.rotation, player, (runner, obj) =>
+        {
+            // Включаем управление только у локального игрока
+            var movement = obj.GetComponent<PlayerMovement>();
+            if (true)
+                movement.enabled = true;
+        });
     }
 }

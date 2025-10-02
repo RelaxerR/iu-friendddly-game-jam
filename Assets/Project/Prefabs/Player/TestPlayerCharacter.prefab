@@ -191,6 +191,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
   _NetworkedHealth: 100
+  _IsDead: 0
 --- !u!114 &-6145521470908898872
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -203,7 +204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59156984db5df764b89e9ba091785bb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RaycastAttack
-  Damage: 10
+  Damage: 17
   PlayerMovement: {fileID: -1955615607992098839}
 --- !u!114 &8719618918022394692
 MonoBehaviour:
