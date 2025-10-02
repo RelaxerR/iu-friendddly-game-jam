@@ -12,6 +12,9 @@ public class PlayerMovement : NetworkBehaviour
     [SerializeField] private float slideSpeed = 300f;
     [SerializeField] private float slopeLimit = 30f;
 
+    [Networked] public float NetworkedSpeedMultiplier { get; set; } = 1f;
+    [Networked] public double BoostEndTime { get; set; }
+
     private CharacterController controller;
     private Vector3 velocity;
     private bool isGrounded;
@@ -26,7 +29,7 @@ public class PlayerMovement : NetworkBehaviour
         if (!Object.HasInputAuthority)
             return;
 
-        // Хак для CharacterController при спавне
+        // Без данного кода игрок не будет спавниться рандомно
         controller.enabled = false;
         transform.position = transform.position;
         controller.enabled = true;
@@ -37,11 +40,15 @@ public class PlayerMovement : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        // берём ввод, если он отсутствует — выходим
+        if (NetworkedSpeedMultiplier != 1f && Runner.SimulationTime >= BoostEndTime)
+        {
+            NetworkedSpeedMultiplier = 1f;
+            BoostEndTime = 0;
+        }
+
         if (!GetInput(out NetworkInputData inputData))
             return;
 
-        // наземье и прыжок
         isGrounded = controller.isGrounded;
         if (isGrounded && velocity.y < 0f)
             velocity.y = -2f;
@@ -49,7 +56,6 @@ public class PlayerMovement : NetworkBehaviour
         if (inputData.JumpPressed && isGrounded)
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
 
-        // строим basis из угла yaw
         float yawRad = inputData.CameraYaw * Mathf.Deg2Rad;
         Vector3 forward = new Vector3(
           Mathf.Sin(yawRad),
@@ -64,12 +70,11 @@ public class PlayerMovement : NetworkBehaviour
         if (move.sqrMagnitude > 1f)
             move.Normalize();
 
-        // устанавливаем горизонтальные скорости
-        velocity.x = move.x * moveSpeed;
-        velocity.z = move.z * moveSpeed;
+        float effectiveSpeed = moveSpeed * NetworkedSpeedMultiplier;
+        velocity.x = move.x * effectiveSpeed;
+        velocity.z = move.z * effectiveSpeed;
         velocity.y += gravity * Runner.DeltaTime;
 
-        // скатывание по крутым склонам
         if (isGrounded)
         {
             Vector3 hitNormal = Vector3.up;
@@ -90,10 +95,16 @@ public class PlayerMovement : NetworkBehaviour
             }
         }
 
-        // внешние силы
         Vector3 extraForces = GetComponent<PlayerForces>()?.ConsumeForces() ?? Vector3.zero;
         velocity += extraForces;
 
         controller.Move(velocity * Runner.DeltaTime);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void Rpc_ApplySpeedBoost(float multiplier, float duration)
+    {
+        NetworkedSpeedMultiplier = multiplier;
+        BoostEndTime = Runner.SimulationTime + duration;
     }
 }

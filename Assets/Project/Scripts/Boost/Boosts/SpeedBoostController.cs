@@ -1,45 +1,34 @@
-using Project.Scripts.Boost.Abstract;
-using Project.Scripts.Boost.Settings;
+using System;
+using Fusion;
 using UnityEngine;
+using Project.Scripts.Boost.Settings;
 
-namespace Project.Scripts.Boost.Boosts
+[RequireComponent(typeof(NetworkObject))]
+public class SpeedBoostController : NetworkBehaviour
 {
-    /// <summary>
-    /// Контроллер буста скорости.
-    /// </summary>
-    public class SpeedBoostController : MonoBehaviour, IBoostDurable
+    public static event Action<Vector3, Quaternion> OnBoostConsumed;
+
+    [SerializeField] private SpeedBoostSettings speedBoostSettings;
+
+    private void OnTriggerEnter(Collider other)
     {
-        #region Fields
+        if (!Object.HasStateAuthority)
+            return;
 
-        [SerializeField] private SpeedBoostSettings speedBoostSettings;
+        var pm = other.GetComponentInParent<PlayerMovement>();
+        if (pm == null)
+            return;
 
-        #endregion
+        pm.Rpc_ApplySpeedBoost(
+            speedBoostSettings.SpeedMultiplier,
+            speedBoostSettings.Duration
+        );
 
-        #region IBoost Implementation
+        Vector3 pos = transform.position;
+        Quaternion rot = transform.rotation;
 
-        /// <inheritdoc />
-        public void Apply()
-        {
-            // TODO: добавить логику увеличения Скорости
-            var speedMultiplier = speedBoostSettings.SpeedMultiplier; // Скорость увеличивается в это кол-во раз
-            Debug.LogWarning("Speed boost logic is not implemented");
-            Destroy(gameObject);
-        }
+        Runner.Despawn(Object);
 
-        /// <inheritdoc />
-        public void Remove()
-        {
-            // TODO: добавить логику отмены увеличения Скорости
-            Debug.LogWarning("Speed boost removal logic is not implemented");
-        }
-
-        #endregion
-
-        #region IBoostDurable Implementation
-
-        /// <inheritdoc />
-        public float GetDuration() => speedBoostSettings.Duration;
-
-        #endregion
+        OnBoostConsumed?.Invoke(pos, rot);
     }
 }

@@ -1,37 +1,45 @@
-using Project.Scripts.Boost.Abstract;
 using Project.Scripts.Boost.Settings;
 using UnityEngine;
+using Fusion;
+using System;
 
-namespace Project.Scripts.Boost.Boosts
+/// <summary>
+/// Контроллер буста здоровья.
+/// </summary>
+[RequireComponent(typeof(NetworkObject))]
+public class HealthBoostController : NetworkBehaviour
 {
-    /// <summary>
-    /// Контроллер буста здоровья.
-    /// </summary>
-    public class HealthBoostController : MonoBehaviour, IBoost
+    public static event Action<Vector3> OnBoostConsumed;
+
+    [SerializeField] private HealthBoostSettings healthBoostSettings;
+
+    private void OnTriggerEnter(Collider other)
     {
-        #region Fields
+        if (!Object.HasStateAuthority)
+            return;
 
-        [SerializeField] private HealthBoostSettings healthBoostSettings;
+        var health = other.GetComponentInParent<Health>();
+        if (health == null || health.IsDead)
+            return;
 
-        #endregion
+        var pm = other.GetComponentInParent<PlayerMovement>();
 
-        #region IBoost Implementation
+        bool hasSpeedActive = false;
+        if (pm != null && pm.NetworkedSpeedMultiplier != 1f && Runner.SimulationTime < pm.BoostEndTime)
+            hasSpeedActive = true;
 
-        /// <inheritdoc />
-        public void Apply()
+        if (hasSpeedActive)
         {
-            // TODO: добавить логику увеличения ХП
-            var healAmount = healthBoostSettings.HealAmount;
-            Debug.LogWarning("Health boost logic is not implemented");
-            Destroy(gameObject);
+            float currentHp = health.NetworkedHealth;
+            health.DealDamageRpc(currentHp, PlayerRef.None);
+        }
+        else
+        {
+            health.HealRpc(healthBoostSettings.HealAmount);
         }
 
-        /// <inheritdoc />
-        public void Remove()
-        {
-            // Буст здоровья не требует отмены.
-        }
-
-        #endregion
+        Vector3 spawnPosition = transform.position;
+        Runner.Despawn(Object);
+        OnBoostConsumed?.Invoke(spawnPosition);
     }
 }

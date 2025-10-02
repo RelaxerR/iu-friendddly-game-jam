@@ -80,7 +80,7 @@ PrefabInstance:
       addedObject: {fileID: 3842714411593077309}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 3cef52c6afda15b4ab092c39c356b272, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6612888490771988419}
+      addedObject: {fileID: -13834247014942806}
   m_SourcePrefab: {fileID: 100100000, guid: 3cef52c6afda15b4ab092c39c356b272, type: 3}
 --- !u!1 &2191286174130250873 stripped
 GameObject:
@@ -126,27 +126,19 @@ MonoBehaviour:
   ObjectInterest: 1
   Flags: 262145
   NestedObjects: []
-  NetworkedBehaviours: []
+  NetworkedBehaviours:
+  - {fileID: -13834247014942806}
   ForceRemoteRenderTimeframe: 0
---- !u!95 &6612888490771988419
-Animator:
-  serializedVersion: 7
+--- !u!114 &-13834247014942806
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2191286174130250873}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: cfd49941d09fb784d8d6fa221d01d749, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 32cd90322b0f0fb469501d5563409f21, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Boost.Boosts.HealthBoostController
+  healthBoostSettings: {fileID: 11400000, guid: 48c56787bce716c4685d3aed215249ae, type: 2}
