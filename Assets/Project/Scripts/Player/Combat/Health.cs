@@ -7,9 +7,6 @@ public class Health : NetworkBehaviour
     [Networked] public float NetworkedHealth { get; set; } = 100f;
     [Networked] public bool IsDead { get; private set; }
 
-    [Header("Respawn Settings")]
-    [SerializeField] private float RespawnDelay = 5f;
-
     private double deathTime;
 
     private CharacterController controller;
@@ -68,5 +65,15 @@ public class Health : NetworkBehaviour
         {
             camera.Rpc_RespawnCamera();
         }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.StateAuthority)]
+    public void HealRpc(float amount)
+    {
+        if (IsDead) return;
+
+        NetworkedHealth += amount;
+        if (NetworkedHealth > 100f)
+            NetworkedHealth = 100f;
     }
 }
