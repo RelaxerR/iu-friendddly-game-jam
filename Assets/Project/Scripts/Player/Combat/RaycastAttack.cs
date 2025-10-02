@@ -1,6 +1,7 @@
 using System.Collections;
 using Fusion;
 using UnityEngine;
+using Project.Scripts.Bootstrap;
 
 [RequireComponent(typeof(NetworkBehaviour))]
 public class RaycastAttack : NetworkBehaviour
@@ -20,6 +21,8 @@ public class RaycastAttack : NetworkBehaviour
 
     private float lastFireTime = -Mathf.Infinity;
 
+    private GameModeManager modeManager;
+
     private void Awake()
     {
         playerCamera = GetComponentInChildren<Camera>();
@@ -28,6 +31,11 @@ public class RaycastAttack : NetworkBehaviour
     public override void Spawned()
     {
         enabled = Object.HasInputAuthority;
+
+        if (Object.HasInputAuthority)
+        {
+            modeManager = FindObjectOfType<GameModeManager>();
+        }
 
         if (lineRendererPrefab != null)
         {
@@ -92,10 +100,23 @@ public class RaycastAttack : NetworkBehaviour
         {
             targetPoint = hit.point;
 
-            if (hit.transform.TryGetComponent<Health>(out var health))
+            if (hit.transform.TryGetComponent<Health>(out var targetHealth))
             {
                 PlayerRef attacker = Object.InputAuthority;
-                health.DealDamageRpc(damage, attacker);
+
+                if (modeManager != null
+                    && modeManager.CurrentMode == GameModeManager.GameMode.GreenTime)
+                {
+                    var selfHealth = GetComponentInParent<Health>();
+                    if (selfHealth != null)
+                    {
+                        selfHealth.DealDamageRpc(damage, attacker);
+                    }
+                }
+                else
+                {
+                    targetHealth.DealDamageRpc(damage, attacker);
+                }
             }
         }
 

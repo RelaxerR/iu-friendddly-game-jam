@@ -21,7 +21,7 @@ namespace Project.Scripts.Media
 
         private GameModeManager _gameModeManager;
 
-        private void Start()
+        private IEnumerator Start()
         {
             _audioSourceA = gameObject.AddComponent<AudioSource>();
             _audioSourceB = gameObject.AddComponent<AudioSource>();
@@ -41,11 +41,14 @@ namespace Project.Scripts.Media
             {
                 Debug.LogError("MediaManager: GameModeManager not found in scene!");
                 enabled = false;
-                return;
+                yield break;
             }
 
             // Подписываемся на событие (оно вызывается на всех клиентах)
             _gameModeManager.OnGameModeChanged += OnGameModeChanged;
+
+            // Ждем, пока на сцене появится AudioListener
+            yield return new WaitUntil(() => FindObjectOfType<AudioListener>() != null);
 
             // Применяем начальное состояние
             OnGameModeChanged(_gameModeManager.CurrentMode);
@@ -66,8 +69,8 @@ namespace Project.Scripts.Media
 
         private IEnumerator FadeBetweenTracks(GameModeManager.GameMode newMode)
         {
-            var newClip = newMode == GameModeManager.GameMode.RedTime 
-                ? _settings.RedTimeMusic 
+            var newClip = newMode == GameModeManager.GameMode.RedTime
+                ? _settings.RedTimeMusic
                 : _settings.GreenTimeMusic;
 
             if (!newClip)
