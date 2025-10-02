@@ -4,7 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class JumpBoostPlatform : NetworkBehaviour
 {
-    [SerializeField] private float jumpHeight = 10f;
+    [SerializeField] private float jumpHeight = 45f;
 
     private void OnTriggerEnter(Collider other)
     {
