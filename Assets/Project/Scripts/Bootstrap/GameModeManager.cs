@@ -10,6 +10,12 @@ namespace Project.Scripts.Bootstrap
     /// </summary>
     public class GameModeManager : NetworkBehaviour
     {
+        // Таймеры длительности режимов в секундах
+        [SerializeField] private float greenDuration = 8f;
+        [SerializeField] private float redDuration = 16f;
+
+        private float modeTimer;
+
         public enum GameMode : byte
         {
             RedTime,
@@ -29,6 +35,20 @@ namespace Project.Scripts.Bootstrap
             OnGameModeChanged?.Invoke(CurrentMode);
         }
 
+        public override void FixedUpdateNetwork()
+        {
+            if (!Object.HasStateAuthority)
+                return;
+
+            modeTimer -= Runner.DeltaTime;
+            if (modeTimer <= 0f)
+            {
+                // Смена режима
+                var nextMode = CurrentMode == GameMode.GreenTime ? GameMode.RedTime : GameMode.GreenTime;
+                SwitchTo(nextMode);
+            }
+        }
+
         /// <summary>
         /// Переключает режим игры. Может быть вызван ТОЛЬКО на сервере (state authority).
         /// </summary>
@@ -46,6 +66,17 @@ namespace Project.Scripts.Bootstrap
 
             CurrentMode = mode;
             // OnCurrentModeChanged вызовется автоматически на всех клиентах благодаря [OnChangedRender]
+
+            modeTimer = mode == GameMode.GreenTime ? greenDuration : redDuration;
+        }
+
+        public override void Spawned()
+        {
+            base.Spawned();
+
+            // Инициализация таймера при старте игры
+            if (Object.HasStateAuthority)
+                modeTimer = CurrentMode == GameMode.GreenTime ? greenDuration : redDuration;
         }
 
         /// <summary>
