@@ -7,10 +7,21 @@ public class PlayerHUD : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private Slider hpSlider;
     [SerializeField] private TMPro.TextMeshProUGUI hpText;
+    [SerializeField] private TMPro.TextMeshProUGUI deathsCount;
+    [SerializeField] private GameObject deathsContainer;
 
     private Health localHealth;
-
     private bool isInitialized = false;
+
+    private void Awake()
+    {
+        hpSlider.gameObject.SetActive(false);
+        if (hpText != null)
+            hpText.gameObject.SetActive(false);
+
+        if (deathsContainer != null)
+            deathsContainer.SetActive(false);
+    }
 
     private void Update()
     {
@@ -22,6 +33,8 @@ public class PlayerHUD : MonoBehaviour
 
         if (localHealth != null)
         {
+            deathsCount.text = localHealth.DeathCount.ToString();
+
             hpSlider.value = localHealth.NetworkedHealth;
             if (hpText != null)
                 hpText.text = Mathf.CeilToInt(localHealth.NetworkedHealth).ToString();
@@ -37,6 +50,15 @@ public class PlayerHUD : MonoBehaviour
                 localHealth = h;
                 localHealth.OnDeath += OnPlayerDeath;
                 isInitialized = true;
+
+                hpSlider.gameObject.SetActive(true);
+                if (hpText != null)
+                    hpText.gameObject.SetActive(true);
+
+                if (deathsContainer != null)
+                    deathsContainer.SetActive(true);
+
+                deathsCount.text = localHealth.DeathCount.ToString();
                 break;
             }
         }
@@ -44,7 +66,10 @@ public class PlayerHUD : MonoBehaviour
 
     private void OnPlayerDeath(Health victim, PlayerRef killer)
     {
+        deathsCount.text = victim.DeathCount.ToString();
+
         hpSlider.value = 0;
-        if (hpText != null) hpText.text = "0";
+        if (hpText != null)
+            hpText.text = "0";
     }
 }

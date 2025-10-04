@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Project.Scripts.Media.MediaSettings
   RedTimeMusic: {fileID: 8300000, guid: 4413631d82c044b429aed5c8d0a69c7a, type: 3}
   GreenTimeMusic: {fileID: 8300000, guid: acbb90dce5253454c96eca855e197509, type: 3}
-  MusicVolume: 0.3
+  MusicVolume: 0.06
   FadeInDuration: 15

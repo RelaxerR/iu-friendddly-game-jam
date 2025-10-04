@@ -9,24 +9,20 @@ public class RaycastAttack : NetworkBehaviour
     [Header("Attack Settings")]
     [SerializeField] private float damage = 17f;
     [SerializeField] private float maxDistance = 100f;
-    [SerializeField] private float visualDuration = 0.3f; // увеличена длительность луча
-    [SerializeField] private float fireRate = 0.5f; // промежуток между выстрелами (сек)
+    [SerializeField] private float visualDuration = 0.3f;
+    [SerializeField] private float fireRate = 0.5f;
 
     [Header("Line Renderer (optional)")]
     [SerializeField] private LineRenderer lineRendererPrefab;
-    [SerializeField] private float lineWidth = 0.02f;
+    [SerializeField] private float lineWidth = 0.03f;
+
+    [Header("Muzzle Settings")]
+    [SerializeField] private Transform muzzleTransform;
 
     private Camera playerCamera;
     private LineRenderer lineRendererInstance;
-
     private float lastFireTime = -Mathf.Infinity;
-
     private GameModeManager modeManager;
-
-    private void Awake()
-    {
-        playerCamera = GetComponentInChildren<Camera>();
-    }
 
     public override void Spawned()
     {
@@ -34,20 +30,16 @@ public class RaycastAttack : NetworkBehaviour
 
         if (Object.HasInputAuthority)
         {
+            playerCamera = GetComponentInChildren<Camera>();
             modeManager = FindObjectOfType<GameModeManager>();
-        }
 
-        if (lineRendererPrefab != null)
-        {
-            lineRendererInstance = Instantiate(lineRendererPrefab, transform);
-            SetupLineRenderer(lineRendererInstance);
-            lineRendererInstance.enabled = false;
-        }
-        else
-        {
-            var go = new GameObject("RaycastVisual_LR");
-            go.transform.SetParent(transform, false);
-            lineRendererInstance = go.AddComponent<LineRenderer>();
+            if (lineRendererPrefab != null)
+                lineRendererInstance = Instantiate(lineRendererPrefab, transform);
+            else
+                lineRendererInstance = new GameObject("RaycastVisual_LR", typeof(LineRenderer))
+                    .GetComponent<LineRenderer>();
+
+            lineRendererInstance.transform.SetParent(transform, false);
             SetupLineRenderer(lineRendererInstance);
             lineRendererInstance.enabled = false;
         }
@@ -70,7 +62,8 @@ public class RaycastAttack : NetworkBehaviour
 
     private void Update()
     {
-        if (!Object.HasInputAuthority) return;
+        if (!Object.HasInputAuthority)
+            return;
 
         if (Input.GetMouseButtonDown(0) && Time.time >= lastFireTime + fireRate)
         {
@@ -83,35 +76,33 @@ public class RaycastAttack : NetworkBehaviour
     {
         if (playerCamera == null)
         {
-            playerCamera = GetComponentInChildren<Camera>();
-            if (playerCamera == null)
-            {
-                Debug.LogWarning("Player camera not found.");
-                return;
-            }
+            Debug.LogWarning("Player camera not found.");
+            return;
         }
 
-        Ray ray = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
-        Vector3 origin = ray.origin + ray.direction * 0.1f;
-        RaycastHit hit;
+        Ray camRay = playerCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        Vector3 camOrigin = camRay.origin;
+        Vector3 camDirection = camRay.direction;
 
-        Vector3 targetPoint = origin + ray.direction * maxDistance;
-        if (Physics.Raycast(origin, ray.direction, out hit, maxDistance))
+        Vector3 visualOrigin = muzzleTransform != null
+            ? muzzleTransform.position
+            : camOrigin + camDirection * 0.1f;
+
+        Vector3 hitPoint = camOrigin + camDirection * maxDistance;
+        RaycastHit hitInfo;
+        if (Physics.Raycast(camOrigin, camDirection, out hitInfo, maxDistance))
         {
-            targetPoint = hit.point;
+            hitPoint = hitInfo.point;
 
-            if (hit.transform.TryGetComponent<Health>(out var targetHealth))
+            if (hitInfo.transform.TryGetComponent<Health>(out var targetHealth))
             {
                 PlayerRef attacker = Object.InputAuthority;
+                bool isGreen = modeManager != null && modeManager.CurrentMode == GameModeManager.GameMode.GreenTime;
 
-                if (modeManager != null
-                    && modeManager.CurrentMode == GameModeManager.GameMode.GreenTime)
+                if (isGreen)
                 {
-                    var selfHealth = GetComponentInParent<Health>();
-                    if (selfHealth != null)
-                    {
+                    if (TryGetComponent<Health>(out var selfHealth))
                         selfHealth.DealDamageRpc(damage, attacker);
-                    }
                 }
                 else
                 {
@@ -121,9 +112,9 @@ public class RaycastAttack : NetworkBehaviour
         }
 
         if (lineRendererInstance != null)
-            StartCoroutine(ShowLine(origin, targetPoint, visualDuration));
+            StartCoroutine(ShowLine(visualOrigin, hitPoint, visualDuration));
         else
-            Debug.DrawLine(origin, targetPoint, new Color(1f, 0.5f, 0f), visualDuration);
+            Debug.DrawLine(visualOrigin, hitPoint, new Color(1f, 0.5f, 0f), visualDuration);
     }
 
     private IEnumerator ShowLine(Vector3 from, Vector3 to, float duration)
