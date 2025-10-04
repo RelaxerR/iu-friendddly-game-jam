@@ -6,8 +6,7 @@ public class Health : NetworkBehaviour
     [Header("Health Settings")]
     [Networked] public float NetworkedHealth { get; set; } = 100f;
     [Networked] public bool IsDead { get; private set; }
-
-    private double deathTime;
+    [Networked] public int DeathCount { get; private set; }
 
     private CharacterController controller;
 
@@ -31,6 +30,7 @@ public class Health : NetworkBehaviour
         {
             NetworkedHealth = 0f;
             IsDead = true;
+            DeathCount++;
             OnDeath?.Invoke(this, attacker);
         }
     }
