@@ -7,20 +7,24 @@ public class PlayerHUD : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private Slider hpSlider;
     [SerializeField] private TMPro.TextMeshProUGUI hpText;
+
+    [Header("Deaths UI")]
     [SerializeField] private TMPro.TextMeshProUGUI deathsCount;
     [SerializeField] private GameObject deathsContainer;
+
+    [Header("Kills UI")]
+    [SerializeField] private TMPro.TextMeshProUGUI killsCount;
+    [SerializeField] private GameObject killsContainer;
 
     private Health localHealth;
     private bool isInitialized = false;
 
     private void Awake()
     {
-        hpSlider.gameObject.SetActive(false);
-        if (hpText != null)
-            hpText.gameObject.SetActive(false);
-
-        if (deathsContainer != null)
-            deathsContainer.SetActive(false);
+        if (hpSlider != null) hpSlider.gameObject.SetActive(false);
+        if (hpText != null) hpText.gameObject.SetActive(false);
+        if (deathsContainer != null) deathsContainer.SetActive(false);
+        if (killsContainer != null) killsContainer.SetActive(false);
     }
 
     private void Update()
@@ -33,11 +37,17 @@ public class PlayerHUD : MonoBehaviour
 
         if (localHealth != null)
         {
-            deathsCount.text = localHealth.DeathCount.ToString();
+            if (hpSlider != null)
+                hpSlider.value = localHealth.NetworkedHealth;
 
-            hpSlider.value = localHealth.NetworkedHealth;
             if (hpText != null)
                 hpText.text = Mathf.CeilToInt(localHealth.NetworkedHealth).ToString();
+
+            if (deathsCount != null)
+                deathsCount.text = localHealth.DeathCount.ToString();
+
+            if (killsCount != null)
+                killsCount.text = localHealth.KillCount.ToString();
         }
     }
 
@@ -52,13 +62,13 @@ public class PlayerHUD : MonoBehaviour
                 isInitialized = true;
 
                 hpSlider.gameObject.SetActive(true);
-                if (hpText != null)
-                    hpText.gameObject.SetActive(true);
+                if (hpSlider != null) hpSlider.gameObject.SetActive(true);
+                if (hpText != null) hpText.gameObject.SetActive(true);
+                if (deathsContainer != null) deathsContainer.SetActive(true);
+                if (killsContainer != null) killsContainer.SetActive(true);
 
-                if (deathsContainer != null)
-                    deathsContainer.SetActive(true);
-
-                deathsCount.text = localHealth.DeathCount.ToString();
+                if (deathsCount != null) deathsCount.text = localHealth.DeathCount.ToString();
+                if (killsCount != null) killsCount.text = localHealth.KillCount.ToString();
                 break;
             }
         }

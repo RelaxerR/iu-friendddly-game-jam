@@ -7,6 +7,7 @@ public class Health : NetworkBehaviour
     [Networked] public float NetworkedHealth { get; set; } = 100f;
     [Networked] public bool IsDead { get; private set; }
     [Networked] public int DeathCount { get; private set; }
+    [Networked] public int KillCount { get; private set; }
 
     private CharacterController controller;
 
@@ -30,7 +31,24 @@ public class Health : NetworkBehaviour
         {
             NetworkedHealth = 0f;
             IsDead = true;
+
             DeathCount++;
+
+            if (attacker != PlayerRef.None)
+            {
+                foreach (var h in FindObjectsOfType<Health>())
+                {
+                    if (h.Object != null && h.Object.InputAuthority == attacker)
+                    {
+                        if (h != this)
+                        {
+                            h.KillCount++;
+                        }
+                        break;
+                    }
+                }
+            }
+
             OnDeath?.Invoke(this, attacker);
         }
     }

@@ -1,15 +1,12 @@
-using Project.Scripts.Boost.Settings;
-using UnityEngine;
-using Fusion;
 using System;
+using Fusion;
+using UnityEngine;
+using Project.Scripts.Boost.Settings;
 
-/// <summary>
-/// Контроллер буста здоровья.
-/// </summary>
 [RequireComponent(typeof(NetworkObject))]
 public class HealthBoostController : NetworkBehaviour
 {
-    public static event Action<Vector3> OnBoostConsumed;
+    public static event Action<NetworkObject, Vector3, Quaternion> OnBoostConsumed;
 
     [SerializeField] private HealthBoostSettings healthBoostSettings;
 
@@ -38,8 +35,26 @@ public class HealthBoostController : NetworkBehaviour
             health.HealRpc(healthBoostSettings.HealAmount);
         }
 
-        Vector3 spawnPosition = transform.position;
+        var parentTransform = transform.parent;
+        NetworkObject parentNetObj = null;
+
+        if (parentTransform != null)
+            parentNetObj = parentTransform.GetComponentInParent<NetworkObject>();
+
+        Vector3 localPosisiton;
+        Quaternion localRotation;
+
+        if (parentTransform != null)
+        {
+            localPosisiton = parentTransform.InverseTransformPoint(transform.position);
+            localRotation = Quaternion.Inverse(parentTransform.rotation) * transform.rotation;
+        }
+        else
+        {
+            transform.GetPositionAndRotation(out localPosisiton, out localRotation);
+        }
+
         Runner.Despawn(Object);
-        OnBoostConsumed?.Invoke(spawnPosition);
+        OnBoostConsumed?.Invoke(parentNetObj, localPosisiton, localRotation);
     }
 }
